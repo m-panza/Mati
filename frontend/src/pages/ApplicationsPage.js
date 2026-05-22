@@ -464,10 +464,7 @@ export default function ApplicationsPage() {
     <div className="page">
       <div className="page-header">
         <h2>Applications</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" disabled={exporting} onClick={async () => { setExporting(true); try { await exportToCSV(filteredTree, summaryByApp, tableAttrs); } finally { setExporting(false); } }}>{exporting ? 'Exportando...' : '↓ Export CSV'}</button>
-          <button className="btn btn-secondary" onClick={() => setRefreshKey(k => k + 1)}>↻ Refresh</button>
-        </div>
+        <button className="btn btn-secondary" onClick={() => setRefreshKey(k => k + 1)}>↻ Refresh</button>
       </div>
 
       <AttributeStatsCards attributes={attributes} summary={summary} />
@@ -485,6 +482,7 @@ export default function ApplicationsPage() {
           <option value="">All services</option>
           {services.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
         </select>
+        <button className="btn btn-secondary" style={{ marginLeft: 'auto' }} disabled={exporting} onClick={async () => { setExporting(true); try { await exportToCSV(filteredTree, summaryByApp, tableAttrs); } finally { setExporting(false); } }}>{exporting ? 'Exportando...' : '↓ Export CSV'}</button>
       </div>
 
       <div style={{ marginTop: 16, overflowY: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 8, border: '1px solid var(--border)' }}>
