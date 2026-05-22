@@ -341,25 +341,52 @@ function AppRow({ app, treeApp, appAttrs, svcAttrs, tableAttrs, serviceFilter })
   );
 }
 
-function exportToCSV(filteredTree, summaryByApp, tableAttrs) {
-  const headers = ['Team', 'App', 'DORA', ...tableAttrs.map(a => a.name)];
+async function exportToCSV(filteredTree, summaryByApp, tableAttrs) {
+  const svcScopeAttrs = tableAttrs.filter(a => a.scope === 'service');
 
+  // Fetch individual service attribute values for all visible services
+  const svcValues = {};
+  if (svcScopeAttrs.length > 0) {
+    const allServices = filteredTree.flatMap(team =>
+      team.apps.flatMap(a => a.services || [])
+    );
+    await Promise.all(
+      allServices.map(svc =>
+        api.getAttributeValues({ service_id: svc.id }).then(vals => {
+          const map = {};
+          vals.forEach(v => { map[v.name] = v.value; });
+          svcValues[svc.id] = map;
+        })
+      )
+    );
+  }
+
+  const headers = ['Team', 'App', 'Service', 'DORA', ...tableAttrs.map(a => a.name)];
   const rows = [];
+
   filteredTree.forEach(team => {
     team.apps.forEach(treeApp => {
       const app = summaryByApp[treeApp.id];
       const status = appStatus(treeApp || { total: 0, with_data: 0 });
 
-      const cols = tableAttrs.map(attr => {
-        if (attr.scope === 'app') {
-          return app?.app_attributes?.[attr.name] ?? '';
-        }
+      // App-level row
+      const appCols = tableAttrs.map(attr => {
+        if (attr.scope === 'app') return app?.app_attributes?.[attr.name] ?? '';
         const count = app?.service_attributes?.[attr.name]?.count;
         const total = app?.service_attributes?.[attr.name]?.total;
         return count != null ? `${count}/${total}` : '';
       });
+      rows.push([team.name, treeApp.name, '', status, ...appCols]);
 
-      rows.push([team.name, treeApp.name, status, ...cols]);
+      // Service-level rows
+      (treeApp.services || []).forEach(svc => {
+        const svcStatus = svc.has_data ? 'measuring' : 'pending';
+        const svcCols = tableAttrs.map(attr => {
+          if (attr.scope === 'app') return app?.app_attributes?.[attr.name] ?? '';
+          return svcValues[svc.id]?.[attr.name] ?? '';
+        });
+        rows.push([team.name, treeApp.name, svc.name, svcStatus, ...svcCols]);
+      });
     });
   });
 
@@ -387,6 +414,7 @@ export default function ApplicationsPage() {
   const [serviceFilter, setServiceFilter] = useState('');
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -437,7 +465,7 @@ export default function ApplicationsPage() {
       <div className="page-header">
         <h2>Applications</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" onClick={() => exportToCSV(filteredTree, summaryByApp, tableAttrs)}>↓ Export CSV</button>
+          <button className="btn btn-secondary" disabled={exporting} onClick={async () => { setExporting(true); try { await exportToCSV(filteredTree, summaryByApp, tableAttrs); } finally { setExporting(false); } }}>{exporting ? 'Exportando...' : '↓ Export CSV'}</button>
           <button className="btn btn-secondary" onClick={() => setRefreshKey(k => k + 1)}>↻ Refresh</button>
         </div>
       </div>
