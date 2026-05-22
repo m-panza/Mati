@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8000}
+        REACT_APP_API_URL: http://localhost:3000
     ports:
       - "${FRONTEND_PORT:-3000}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
