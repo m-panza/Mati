@@ -18,12 +18,26 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum types first
-    op.execute("CREATE TYPE user_rol AS ENUM ('admin', 'supervisor', 'operador', 'visualizador')")
-    op.execute("CREATE TYPE receptor_tipo AS ENUM ('cooperativa', 'fundacion', 'organizacion', 'operador', 'proveedor', 'otro')")
-    op.execute("CREATE TYPE entidad_tipo_enum AS ENUM ('sitio', 'isla', 'nodo')")
-    op.execute("CREATE TYPE rol_asignacion_enum AS ENUM ('responsable', 'suplente', 'operador')")
-    op.execute("CREATE TYPE qr_entidad_tipo_enum AS ENUM ('tacho', 'isla', 'nodo')")
+    # Create enum types (idempotentes via DO block)
+    op.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_rol') THEN
+                CREATE TYPE user_rol AS ENUM ('admin', 'supervisor', 'operador', 'visualizador');
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'receptor_tipo') THEN
+                CREATE TYPE receptor_tipo AS ENUM ('cooperativa', 'fundacion', 'organizacion', 'operador', 'proveedor', 'otro');
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'entidad_tipo_enum') THEN
+                CREATE TYPE entidad_tipo_enum AS ENUM ('sitio', 'isla', 'nodo');
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rol_asignacion_enum') THEN
+                CREATE TYPE rol_asignacion_enum AS ENUM ('responsable', 'suplente', 'operador');
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'qr_entidad_tipo_enum') THEN
+                CREATE TYPE qr_entidad_tipo_enum AS ENUM ('tacho', 'isla', 'nodo');
+            END IF;
+        END $$;
+    """)
 
     # users
     op.create_table(
