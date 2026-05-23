@@ -77,6 +77,7 @@ from app.routers.personas import router as personas_router
 from app.routers.qr import router as qr_router
 from app.routers.documentos import router as documentos_router
 from app.routers.exportacion import router as exportacion_router
+from app.routers.auditoria import router as auditoria_router
 
 app.include_router(auth_router)
 app.include_router(users_router)
@@ -92,6 +93,7 @@ app.include_router(personas_router)
 app.include_router(qr_router)
 app.include_router(documentos_router)
 app.include_router(exportacion_router)
+app.include_router(auditoria_router)
 
 
 @app.get("/health")
