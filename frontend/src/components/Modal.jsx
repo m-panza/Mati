@@ -13,7 +13,7 @@ export default function Modal({ title, onClose, children, width = '520px' }) {
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,0,0.6)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '20px',
+        padding: '12px',
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -22,9 +22,9 @@ export default function Modal({ title, onClose, children, width = '520px' }) {
           background: 'var(--bg-2)',
           border: '1px solid var(--border-2)',
           borderRadius: '12px',
-          width,
-          maxWidth: '100%',
-          maxHeight: '90vh',
+          width: '100%',
+          maxWidth: width,
+          maxHeight: '92dvh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
